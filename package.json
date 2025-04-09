@@ -1,0 +1,20 @@
+{
+  "name": "ar-luciano",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "pdf-lib": "^1.17.1",
+    "pdfmake": "^0.2.18"
+  },
+  "devDependencies": {
+    "@types/pdfmake": "^0.2.11",
+    "typescript": "^5.8.3"
+  }
+}
