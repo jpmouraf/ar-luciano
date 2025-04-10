@@ -1,0 +1,32 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-1.1.x"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model InteligenciaWasi {
+  id                    Int     @id @default(autoincrement())
+  pacienteNome          String
+  
+  qiVerbalPontuacao     Int
+  qiVerbalIntervaloMin  Int
+  qiVerbalIntervaloMax  Int
+  qiVerbalPercentil     Int
+  qiVerbalClassificacao String
+  
+  qiExecPontuacao       Int
+  qiExecIntervaloMin    Int
+  qiExecIntervaloMax    Int
+  qiExecPercentil       Int
+  qiExecClassificacao   String
+  
+  qiTotalPontuacao      Int
+  qiTotalIntervaloMin   Int
+  qiTotalIntervaloMax   Int
+  qiTotalPercentil      Int
+  qiTotalClassificacao  String
+}

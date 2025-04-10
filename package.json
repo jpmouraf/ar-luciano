@@ -3,18 +3,30 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@fontsource/roboto": "^5.2.5",
+    "@prisma/client": "^6.6.0",
+    "express": "^5.1.0",
+    "fs-extra": "^11.3.0",
+    "path": "^0.12.7",
     "pdf-lib": "^1.17.1",
+    "pdfkit": "^0.16.0",
     "pdfmake": "^0.2.18"
   },
   "devDependencies": {
+    "@types/express": "^5.0.1",
+    "@types/pdfkit": "^0.13.9",
     "@types/pdfmake": "^0.2.11",
+    "ts-node-dev": "^2.0.0",
     "typescript": "^5.8.3"
   }
 }
