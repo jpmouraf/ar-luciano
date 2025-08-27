@@ -1,116 +1,84 @@
 import { prismaClient } from '../config/prismaClient';
 import PDFDocument from 'pdfkit';
 
-export async function generatePdfBuffer(): Promise<Buffer> {
-  // Buscar dados do banco de dados
-  const dados = await prismaClient.inteligenciaWasi.findFirst();
-  
-  if (!dados) {
-    throw new Error("Nenhum dado encontrado para gerar o PDF");
-  }
-
-  // Criar um buffer para armazenar o PDF
+export async function generatePdfBuffer(dados: any): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     try {
       const chunks: Buffer[] = [];
       const doc = new PDFDocument({ margin: 50 });
 
-      // Capturar os chunks de dados à medida que são gerados
       doc.on('data', (chunk) => chunks.push(chunk));
       doc.on('end', () => resolve(Buffer.concat(chunks)));
       doc.on('error', reject);
 
-      // Adicionar conteúdo ao PDF
-      doc.fontSize(20).text('LAUDO PSICOLÓGICO DE AVALIAÇÃO NEUROPSICOLÓGICA', { align: 'center' });
-      doc.moveDown();
-      
-      doc.fontSize(16).text(`Paciente: ${dados.pacienteNome}`);
-      doc.moveDown();
-      
-      // Dados da Escala Wechsler Abreviada de Inteligência - WASI
-      doc.fontSize(14).text('Resultados da Escala Wechsler Abreviada de Inteligência - WASI', { underline: true });
+      // Cabeçalho
+      doc.fontSize(20).text('LAUDO PSICOLÓGICO DE AVALIAÇÃO NEUROPSICOLÓGICA', {
+        align: 'center'
+      });
       doc.moveDown();
 
-      // Configuração da tabela
-      const startX = 70;
-      let startY = doc.y + 10;
-      const rowHeight = 25;
-      const colWidths = [110, 110, 140, 60, 110];
-      const tableWidth = colWidths.reduce((a, b) => a + b, 0);
-      
-      // Desenhar retângulo para o cabeçalho
-      doc.rect(startX, startY - 5, tableWidth, rowHeight).stroke();
-      
+      doc.fontSize(16).text(`Paciente: ${dados.pacienteNome}`);
+      doc.moveDown();
+
+      doc.fontSize(14).text(
+        'Resultados da Escala Wechsler Abreviada de Inteligência - WASI',
+        { underline: true }
+      );
+      doc.moveDown();
+
+      // Dados da tabela
+      const resultados = [
+        {
+          indice: "QI Verbal",
+          ponto: dados.qiVerbalPontuacao,
+          intervalo: `${dados.qiVerbalIntervaloMin}–${dados.qiVerbalIntervaloMax}`,
+          percentil: dados.qiVerbalPercentil,
+          classificacao: dados.qiVerbalClassificacao,
+        },
+        {
+          indice: "QI de Execução",
+          ponto: dados.qiExecPontuacao,
+          intervalo: `${dados.qiExecIntervaloMin}–${dados.qiExecIntervaloMax}`,
+          percentil: dados.qiExecPercentil,
+          classificacao: dados.qiExecClassificacao,
+        },
+        {
+          indice: "QI Total",
+          ponto: dados.qiTotalPontuacao,
+          intervalo: `${dados.qiTotalIntervaloMin}–${dados.qiTotalIntervaloMax}`,
+          percentil: dados.qiTotalPercentil,
+          classificacao: dados.qiTotalClassificacao,
+        },
+      ];
+
+      // Coordenadas de início
+      let startY = doc.y;
+      const colX = [50, 200, 260, 380, 450]; // posições de cada coluna
+
       // Cabeçalho da tabela
-      doc.font('Helvetica-Bold');
-      doc.fontSize(10);
-      
-      doc.text('Índice', startX + 5, startY);
-      doc.text('Ponto Composto', startX + colWidths[0] + 5, startY);
-      doc.text('Intervalo de Confiança 95%', startX + colWidths[0] + colWidths[1] + 5, startY);
-      doc.text('Percentil', startX + colWidths[0] + colWidths[1] + colWidths[2] + 5, startY);
-      doc.text('Classificação', startX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + 5, startY);
-      
-      // Linhas verticais do cabeçalho
-      doc.moveTo(startX + colWidths[0], startY - 5).lineTo(startX + colWidths[0], startY + rowHeight - 5).stroke();
-      doc.moveTo(startX + colWidths[0] + colWidths[1], startY - 5).lineTo(startX + colWidths[0] + colWidths[1], startY + rowHeight - 5).stroke();
-      doc.moveTo(startX + colWidths[0] + colWidths[1] + colWidths[2], startY - 5).lineTo(startX + colWidths[0] + colWidths[1] + colWidths[2], startY + rowHeight - 5).stroke();
-      doc.moveTo(startX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3], startY - 5).lineTo(startX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3], startY + rowHeight - 5).stroke();
-      
-      // Função para desenhar linha da tabela
-      function drawTableRow(index: string, pontoComposto: string, intervalo: string, percentil: string, classificacao: string, currentY: number) {
-        // Desenhar retângulo para a linha
-        doc.rect(startX, currentY - 5, tableWidth, rowHeight).stroke();
-        
-        // Dados da linha
-        doc.font('Helvetica');
-        doc.text(index, startX + 5, currentY);
-        doc.text(pontoComposto, startX + colWidths[0] + 5, currentY);
-        doc.text(intervalo, startX + colWidths[0] + colWidths[1] + 5, currentY);
-        doc.text(percentil, startX + colWidths[0] + colWidths[1] + colWidths[2] + 5, currentY);
-        doc.text(classificacao, startX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + 5, currentY);
-        
-        // Linhas verticais
-        doc.moveTo(startX + colWidths[0], currentY - 5).lineTo(startX + colWidths[0], currentY + rowHeight - 5).stroke();
-        doc.moveTo(startX + colWidths[0] + colWidths[1], currentY - 5).lineTo(startX + colWidths[0] + colWidths[1], currentY + rowHeight - 5).stroke();
-        doc.moveTo(startX + colWidths[0] + colWidths[1] + colWidths[2], currentY - 5).lineTo(startX + colWidths[0] + colWidths[1] + colWidths[2], currentY + rowHeight - 5).stroke();
-        doc.moveTo(startX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3], currentY - 5).lineTo(startX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3], currentY + rowHeight - 5).stroke();
-      }
-      
-      // Dados das linhas
-      startY += rowHeight;
-      drawTableRow(
-        'QI Verbal', 
-        dados.qiVerbalPontuacao.toString(), 
-        `${dados.qiVerbalIntervaloMin}–${dados.qiVerbalIntervaloMax}`, 
-        dados.qiVerbalPercentil.toString(), 
-        dados.qiVerbalClassificacao,
-        startY
-      );
-      
-      startY += rowHeight;
-      drawTableRow(
-        'QI de Execução', 
-        dados.qiExecPontuacao.toString(), 
-        `${dados.qiExecIntervaloMin}–${dados.qiExecIntervaloMax}`, 
-        dados.qiExecPercentil.toString(), 
-        dados.qiExecClassificacao,
-        startY
-      );
-      
-      startY += rowHeight;
-      drawTableRow(
-        'QI Total', 
-        dados.qiTotalPontuacao.toString(), 
-        `${dados.qiTotalIntervaloMin}–${dados.qiTotalIntervaloMax}`, 
-        dados.qiTotalPercentil.toString(), 
-        dados.qiTotalClassificacao,
-        startY
-      );
-      
-      // Finalizar o documento
+      doc.font('Helvetica-Bold').fontSize(12);
+      doc.text("Índice", colX[0], startY);
+      doc.text("Ponto", colX[1], startY);
+      doc.text("Intervalo", colX[2], startY);
+      doc.text("Percentil", colX[3], startY);
+      doc.text("Classificação", colX[4], startY);
+
+      startY += 20;
+      doc.moveTo(50, startY - 5).lineTo(550, startY - 5).stroke(); // linha horizontal
+
+      // Linhas da tabela
+      doc.font('Helvetica').fontSize(12);
+      resultados.forEach(r => {
+        doc.text(r.indice, colX[0], startY);
+        doc.text(String(r.ponto), colX[1], startY);
+        doc.text(r.intervalo, colX[2], startY);
+        doc.text(String(r.percentil), colX[3], startY);
+        doc.text(r.classificacao, colX[4], startY);
+        startY += 20;
+        doc.moveTo(50, startY - 5).lineTo(550, startY - 5).stroke();
+      });
+
       doc.end();
-      
     } catch (error) {
       reject(error);
     }
